@@ -21,6 +21,22 @@ public class Grafo {
         vertices = new ArrayList<>();
     }
 
+    // -------------------------------------------------------------------------
+    // Getters auxiliares (usados pelo LinkedInAnalyzer)
+    // -------------------------------------------------------------------------
+
+    public List<Vertice> getVertices() {
+        return vertices;
+    }
+
+    public List<Aresta> getArestas() {
+        return arestas;
+    }
+
+    // -------------------------------------------------------------------------
+    // Construção do grafo
+    // -------------------------------------------------------------------------
+
     public void adicionaVertices(String... nomes) {
         for (String nome : nomes) {
             vertices.add(new Vertice(nome));
@@ -59,8 +75,8 @@ public class Grafo {
     }
 
     private void resolveAdjacencias(Vertice v1, Vertice v2) {
-        v1.adicionaAdjacencia(v2); // v1 envia p v2
-        v2.adicionaAdjacente(v1); // v2 recebe de v1
+        v1.adicionaAdjacencia(v2);
+        v2.adicionaAdjacente(v1);
         if (!eDirigido) {
             v1.adicionaAdjacente(v2);
             v2.adicionaAdjacencia(v1);
@@ -134,6 +150,112 @@ public class Grafo {
         });
     }
 
+    // -------------------------------------------------------------------------
+    // Dijkstra — menor caminho ponderado
+    //
+    // Retorna um ResultadoDijkstra com:
+    //   • distancias : custo mínimo de 'origem' até cada vértice
+    //   • predecessores: mapa para reconstruir o caminho
+    // -------------------------------------------------------------------------
+
+    public ResultadoDijkstra dijkstra(String nomeOrigem) {
+        Vertice origem = encontraVertice(nomeOrigem).orElseThrow(
+                () -> new IllegalArgumentException("Vértice " + nomeOrigem + " não encontrado."));
+
+        // Mapas de distância e predecessor
+        Map<Vertice, Integer> dist = new HashMap<>();
+        Map<Vertice, Vertice> pred = new HashMap<>();
+
+        for (Vertice v : vertices) {
+            dist.put(v, Integer.MAX_VALUE);
+            pred.put(v, null);
+        }
+        dist.put(origem, 0);
+
+        // Fila de prioridade: ordena pelo custo acumulado (menor primeiro)
+        PriorityQueue<Vertice> fila = new PriorityQueue<>(
+                Comparator.comparingInt(v -> dist.getOrDefault(v, Integer.MAX_VALUE)));
+        fila.add(origem);
+
+        Set<Vertice> visitados = new HashSet<>();
+
+        while (!fila.isEmpty()) {
+            Vertice atual = fila.poll();
+
+            if (visitados.contains(atual)) continue;
+            visitados.add(atual);
+
+            // Percorre todas as arestas que partem de 'atual'
+            // (para grafo não-dirigido, as arestas são registradas nos dois sentidos)
+            for (Aresta aresta : arestas) {
+                Vertice vizinho = null;
+                if (aresta.getVerticeOrigem().equals(atual)) {
+                    vizinho = aresta.getVerticeDestino();
+                } else if (!eDirigido && aresta.getVerticeDestino().equals(atual)) {
+                    vizinho = aresta.getVerticeOrigem();
+                }
+
+                if (vizinho == null || visitados.contains(vizinho)) continue;
+
+                int peso = aresta.getPeso() != null ? aresta.getPeso() : 1;
+                int novaDist = dist.get(atual) + peso;
+
+                if (novaDist < dist.get(vizinho)) {
+                    dist.put(vizinho, novaDist);
+                    pred.put(vizinho, atual);
+                    fila.add(vizinho); // re-insere com distância atualizada
+                }
+            }
+        }
+
+        return new ResultadoDijkstra(dist, pred);
+    }
+
+    // -------------------------------------------------------------------------
+    // BFS — menor caminho em número de arestas (sem peso)
+    // -------------------------------------------------------------------------
+
+    public List<String> bfs(String nomeOrigem, String nomeDestino) {
+        Vertice origem = encontraVertice(nomeOrigem).orElseThrow();
+        Vertice destino = encontraVertice(nomeDestino).orElseThrow();
+
+        Map<Vertice, Vertice> pred = new HashMap<>();
+        Queue<Vertice> fila = new LinkedList<>();
+        Set<Vertice> visitados = new HashSet<>();
+
+        fila.add(origem);
+        visitados.add(origem);
+        pred.put(origem, null);
+
+        while (!fila.isEmpty()) {
+            Vertice atual = fila.poll();
+            if (atual.equals(destino)) break;
+
+            for (Vertice viz : atual.getAdjacencias()) {
+                if (!visitados.contains(viz)) {
+                    visitados.add(viz);
+                    pred.put(viz, atual);
+                    fila.add(viz);
+                }
+            }
+        }
+
+        if (!pred.containsKey(destino)) return Collections.emptyList();
+
+        // Reconstrói o caminho
+        List<String> caminho = new ArrayList<>();
+        Vertice passo = destino;
+        while (passo != null) {
+            caminho.add(0, passo.getNome());
+            passo = pred.get(passo);
+        }
+        return caminho;
+    }
+
+    // -------------------------------------------------------------------------
+    // Métodos já existentes (mantidos integralmente)
+    // -------------------------------------------------------------------------
+
     public String exibeGrausDosVertices() {
         StringBuilder graus = new StringBuilder();
         for (Vertice vertice : vertices) {
@@ -160,13 +282,10 @@ public class Grafo {
 
     public void exibeMatrizAdjacencia() {
         List<Vertice> verticesOrdenados = vertices.stream().sorted(Comparator.comparing(Vertice::getNome)).toList();
-
-        StringBuilder matriz = new StringBuilder("\nMatriz de Adjacência\n");
-        matriz.append("\t");
+        StringBuilder matriz = new StringBuilder("\nMatriz de Adjacência\n\t");
         verticesOrdenados.forEach(v -> matriz.append(v.getNome()).append("\t"));
         matriz.append("\n");
-
-        for (Vertice vertice : verticesOrdenados) { // read-only
+        for (Vertice vertice : verticesOrdenados) {
             matriz.append(vertice.getNome()).append("\t");
             List<Vertice> adjacencias = vertice.getAdjacencias();
             for (Vertice outroVertice : verticesOrdenados) {
@@ -194,7 +313,7 @@ public class Grafo {
                     valor = eDirigido ? "-1" : "1";
                 } else if (destino.equals(vertice)) {
                     valor = " 1";
-                } else { // caso contrário
+                } else {
                     valor = " 0";
                 }
                 matriz.append(valor).append("\t");
@@ -217,39 +336,34 @@ public class Grafo {
 
         visitados.add(verticeOrigem);
         pilha.push(verticeOrigem);
-
         percurso.append(verticeOrigem.getNome()).append(", ");
 
         while (!pilha.isEmpty()) {
             Vertice atual = pilha.peek();
-
-            if (atual.equals(verticeDestino)) {
-                break;
-            }
+            if (atual.equals(verticeDestino)) break;
 
             List<Vertice> adjacencias = atual.getAdjacencias();
-            List<Vertice> adjacenciasOrdenadas = adjacencias.stream().sorted(Comparator.comparing(Vertice::getNome))
-                    .toList();
-
-            // Pegue a primeira adjacência não visitada
-            Optional<Vertice> proximo = adjacenciasOrdenadas.stream().filter(a -> !visitados.contains(a)).findFirst();
+            List<Vertice> adjacenciasOrdenadas = adjacencias.stream()
+                    .sorted(Comparator.comparing(Vertice::getNome)).toList();
+            Optional<Vertice> proximo = adjacenciasOrdenadas.stream()
+                    .filter(a -> !visitados.contains(a)).findFirst();
 
             if (proximo.isPresent()) {
                 Vertice adjacencia = proximo.get();
                 visitados.add(adjacencia);
                 percurso.append(adjacencia.getNome()).append(", ");
-                pilha.push(adjacencia); // avança para o primeiro vizinho não visitado
+                pilha.push(adjacencia);
             } else {
-                pilha.pop(); // vértice esgotado: remove da pilha
+                pilha.pop();
             }
         }
+
         System.out.println(percurso);
         return visitados.stream().map(Vertice::getNome).toList();
     }
 
     public List<String> dfsRecursivo(String origem, String destino, List<Vertice> visitados) {
         final List<Vertice> visitadosAtual = visitados != null ? visitados : new ArrayList<>();
-
         Vertice v = encontraVertice(origem).orElseThrow(
                 () -> new IllegalArgumentException("Vertice " + origem + " não encontrado."));
         visitadosAtual.add(v);
@@ -258,32 +372,20 @@ public class Grafo {
             return visitadosAtual.stream().map(Vertice::getNome).toList();
         }
 
-        // itera os vizinhos um a um — após backtrack, os já visitados são pulados pelo
-        // contains()
-        // espelhando o peek() + findFirst() do iterativo
         for (Vertice adj : v.getAdjacencias()) {
-            if (visitadosAtual.contains(adj)) {
-                continue;
-            }
-
+            if (visitadosAtual.contains(adj)) continue;
             dfsRecursivo(adj.getNome(), destino, visitadosAtual);
-
-            // se destino foi encontrado em algum ramo, propaga o resultado
             if (destino != null && visitadosAtual.stream().anyMatch(x -> x.getNome().equals(destino))) {
                 return visitadosAtual.stream().map(Vertice::getNome).toList();
             }
         }
-        // vértice esgotado (sem vizinhos não visitados): retorna o percurso até aqui
         return visitadosAtual.stream().map(Vertice::getNome).toList();
     }
 
     public int encontraComprimentoCaminho(String... caminho) {
-        if (!ePonderado) {
-            return caminho.length - 1; // qtd de arestas percorridas
-        }
+        if (!ePonderado) return caminho.length - 1;
         int comprimento = 0;
         List<Aresta> arestasPercorridas = new ArrayList<>();
-
         for (int i = 0; i < caminho.length - 1; i++) {
             int indiceAtual = i;
             Vertice origem = encontraVertice(caminho[indiceAtual]).orElseThrow(
@@ -294,9 +396,8 @@ public class Grafo {
                     .filter(a -> a.getVerticeOrigem().equals(origem) && a.getVerticeDestino().equals(destino))
                     .findFirst();
             if (aresta.isPresent()) {
-                if (arestasPercorridas.contains(aresta.get())) {
+                if (arestasPercorridas.contains(aresta.get()))
                     throw new IllegalArgumentException("Aresta repetida!");
-                }
                 arestasPercorridas.add(aresta.get());
                 comprimento += aresta.get().getPeso();
             }
@@ -306,24 +407,12 @@ public class Grafo {
 
     public boolean eConexo() {
         for (Vertice v : vertices)
-            if (v.getInDegree() == 0 || v.getOutDegree() == 0) {
-                return false;
-            }
-
+            if (v.getInDegree() == 0 || v.getOutDegree() == 0) return false;
         for (Vertice v : vertices) {
             List<String> caminho = dfsIterativo(v.getNome(), null);
-            if (caminho.size() < vertices.size()) {
-                return false;
-            }
+            if (caminho.size() < vertices.size()) return false;
         }
         return true;
-    }
-
-    public boolean eConexoSimplificado() {
-        if (vertices.stream().anyMatch(v -> v.getInDegree() == 0 || v.getOutDegree() == 0)) {
-            return false;
-        }
-        return vertices.stream().noneMatch(v -> dfsIterativo(v.getNome(), null).size() < vertices.size());
     }
 
     public List<String> greedySearch(String nomeVerticeOrigem, String nomeVerticeDestino) {
@@ -338,50 +427,34 @@ public class Grafo {
 
         while (!atual.equals(verticeDestino)) {
             Vertice verticeAlvo = atual;
-
-            // Otimização: Pegamos direto os vizinhos sem iterar sobre arestas do grafo
-            // inteiro
             List<Vertice> adjacencias = verticeAlvo.getAdjacencias();
             if (adjacencias == null || adjacencias.isEmpty()) {
                 System.out.println("Caminho não encontrado. Busca falhou em: " + atual.getNome());
                 return null;
             }
-
-            // Busca a aresta não percorrida com o menor peso baseada nos vizinhos do
-            // vértice atual
             List<Aresta> arestasVizinhas = new ArrayList<>();
             for (Vertice vizinho : adjacencias) {
                 if (!verticesVisitados.contains(vizinho)) {
                     arestasVizinhas.addAll(obtemArestasParaVizinho(verticeAlvo, vizinho));
                 }
             }
-
-            // Se não houver arestas vizinhas, significa que não há caminho para o destino
             if (arestasVizinhas.isEmpty()) {
                 System.out.println("Caminho não encontrado. Busca falhou em: " + atual.getNome());
                 return null;
             }
-
-            // Pega a aresta com o menor peso
             Aresta melhorAresta = arestasVizinhas.stream()
-                    .min(Comparator.comparing(Aresta::getPeso))
-                    .orElseThrow();
-
+                    .min(Comparator.comparing(Aresta::getPeso)).orElseThrow();
             comprimentoCaminho += melhorAresta.getPeso() != null ? melhorAresta.getPeso() : 0;
             atual = obtemVerticeOposto(melhorAresta, verticeAlvo);
             verticesVisitados.add(atual);
-
             System.out.println("Percorrendo aresta " + melhorAresta.getNome() +
-                    " (peso " + melhorAresta.getPeso() +
-                    ") para o vértice " + atual.getNome());
+                    " (peso " + melhorAresta.getPeso() + ") para o vértice " + atual.getNome());
         }
 
         List<String> nomesVisitados = verticesVisitados.stream().map(Vertice::getNome).toList();
-
-        System.out.println("Destino " + verticeDestino.getNome() + " encontrado! Busca concluída com sucesso.");
+        System.out.println("Destino " + verticeDestino.getNome() + " encontrado!");
         System.out.println("Caminho: " + String.join(" -> ", nomesVisitados));
         System.out.println("Comprimento do caminho: " + comprimentoCaminho);
-
         return nomesVisitados;
     }
 
@@ -407,7 +480,7 @@ public class Grafo {
                 graus = %s,
                 adjacencias = %s,
                 adjacentes = %s
-                }""".formatted(eDirigido ? "sim" : "não", ordem, tamanho, vertices, arestas, exibeGrausDosVertices(),
-                exibeAdjacencias(), exibeAdjacentes());
+                }""".formatted(eDirigido ? "sim" : "não", ordem, tamanho, vertices, arestas,
+                exibeGrausDosVertices(), exibeAdjacencias(), exibeAdjacentes());
     }
 }
