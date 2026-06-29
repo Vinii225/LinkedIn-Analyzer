@@ -2,11 +2,6 @@ package br.com.unipe;
 
 import java.util.Map;
 
-/**
- * Encapsula o resultado do algoritmo de Dijkstra:
- *  - distancias   : custo mínimo acumulado da origem até cada vértice
- *  - predecessores: mapa para reconstrução do caminho
- */
 public class ResultadoDijkstra {
     private final Map<Vertice, Integer> distancias;
     private final Map<Vertice, Vertice> predecessores;

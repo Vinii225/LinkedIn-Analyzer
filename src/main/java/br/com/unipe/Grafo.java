@@ -21,10 +21,6 @@ public class Grafo {
         vertices = new ArrayList<>();
     }
 
-    // -------------------------------------------------------------------------
-    // Getters auxiliares (usados pelo LinkedInAnalyzer)
-    // -------------------------------------------------------------------------
-
     public List<Vertice> getVertices() {
         return vertices;
     }
@@ -32,10 +28,6 @@ public class Grafo {
     public List<Aresta> getArestas() {
         return arestas;
     }
-
-    // -------------------------------------------------------------------------
-    // Construção do grafo
-    // -------------------------------------------------------------------------
 
     public void adicionaVertices(String... nomes) {
         for (String nome : nomes) {
@@ -251,10 +243,6 @@ public class Grafo {
         }
         return caminho;
     }
-
-    // -------------------------------------------------------------------------
-    // Métodos já existentes (mantidos integralmente)
-    // -------------------------------------------------------------------------
 
     public String exibeGrausDosVertices() {
         StringBuilder graus = new StringBuilder();

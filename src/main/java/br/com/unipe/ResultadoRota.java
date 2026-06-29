@@ -2,11 +2,6 @@ package br.com.unipe;
 
 import java.util.List;
 
-/**
- * Encapsula o resultado da Missão 4 (Rota de Maior Afinidade):
- *  - caminho : sequência ordenada de nomes da rota ótima
- *  - custo   : soma dos pesos das arestas percorridas (-1 se inalcançável)
- */
 public class ResultadoRota {
     private final List<String> caminho;
     private final int custo;

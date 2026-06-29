@@ -2,21 +2,8 @@ package br.com.unipe;
 
 import java.util.*;
 
-/**
- * LinkedInAnalyzer — motor de análise e recomendação da rede social.
- *
- * Missões implementadas:
- *  1. Construtor               — recebe e armazena a instância do Grafo
- *  2. sugerirConexoes()        — amigos de 2º grau ordenados por amigos em comum
- *  3. grauDeSeparacao()        — número de passos (BFS) entre dois perfis
- *  4. rotaDeMaiorAfinidade()   — menor caminho ponderado via Dijkstra
- *  5. mapearGruposIsolados()   — componentes conexos (sub-redes)
- */
-public class LinkedInAnalyzer {
 
-    // -------------------------------------------------------------------------
-    // Missão 1 — Construtor
-    // -------------------------------------------------------------------------
+public class LinkedInAnalyzer {
 
     private final Grafo grafo;
 
@@ -26,11 +13,6 @@ public class LinkedInAnalyzer {
     public LinkedInAnalyzer(Grafo grafo) {
         this.grafo = grafo;
     }
-
-    // -------------------------------------------------------------------------
-    // Missão 2 — Sugestão de Conexões (Amigos de 2º Grau)
-    // -------------------------------------------------------------------------
-
     /**
      * Sugere conexões de 2º grau para o usuário informado.
      *
@@ -73,11 +55,6 @@ public class LinkedInAnalyzer {
 
         return sugestoes;
     }
-
-    // -------------------------------------------------------------------------
-    // Missão 3 — Grau de Separação
-    // -------------------------------------------------------------------------
-
     /**
      * Calcula o grau de separação (número de passos) entre dois perfis.
      * Usa BFS para encontrar o caminho com o menor número de arestas.
@@ -102,11 +79,6 @@ public class LinkedInAnalyzer {
         // Número de passos = número de arestas = tamanho do caminho - 1
         return caminho.size() - 1;
     }
-
-    // -------------------------------------------------------------------------
-    // Missão 4 — Rota e Custo de Maior Afinidade (Dijkstra)
-    // -------------------------------------------------------------------------
-
     /**
      * Encontra a rota de maior afinidade (menor custo ponderado) entre dois perfis.
      * Utiliza o algoritmo de Dijkstra implementado na classe {@link Grafo}.
@@ -144,11 +116,6 @@ public class LinkedInAnalyzer {
         int custoTotal = distancias.get(destino);
         return new ResultadoRota(caminho, custoTotal);
     }
-
-    // -------------------------------------------------------------------------
-    // Missão 5 — Mapear Grupos Isolados (Componentes Conexos)
-    // -------------------------------------------------------------------------
-
     /**
      * Identifica todos os grupos de pessoas conectadas entre si,
      * mas isoladas do restante da rede (componentes conexos).
