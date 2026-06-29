@@ -1,6 +1,5 @@
 package br.com.unipe;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 

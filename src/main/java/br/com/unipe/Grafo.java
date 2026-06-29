@@ -1,6 +1,5 @@
 package br.com.unipe;
 
-import javax.swing.*;
 import java.util.*;
 
 public class Grafo {
@@ -175,7 +174,6 @@ public class Grafo {
             }
             matriz.append("\n");
         }
-
         System.out.println(matriz);
     }
 
@@ -245,7 +243,6 @@ public class Grafo {
                 pilha.pop(); // vértice esgotado: remove da pilha
             }
         }
-
         System.out.println(percurso);
         return visitados.stream().map(Vertice::getNome).toList();
     }
@@ -276,7 +273,6 @@ public class Grafo {
                 return visitadosAtual.stream().map(Vertice::getNome).toList();
             }
         }
-
         // vértice esgotado (sem vizinhos não visitados): retorna o percurso até aqui
         return visitadosAtual.stream().map(Vertice::getNome).toList();
     }
@@ -389,7 +385,6 @@ public class Grafo {
         return nomesVisitados;
     }
 
-
     private List<Aresta> obtemArestasParaVizinho(Vertice atual, Vertice vizinho) {
         return arestas.stream()
                 .filter(a -> (a.getVerticeOrigem().equals(atual) && a.getVerticeDestino().equals(vizinho)) ||
@@ -400,7 +395,6 @@ public class Grafo {
     private Vertice obtemVerticeOposto(Aresta aresta, Vertice vertice) {
         return aresta.getVerticeOrigem().equals(vertice) ? aresta.getVerticeDestino() : aresta.getVerticeOrigem();
     }
-
 
     @Override
     public String toString() {

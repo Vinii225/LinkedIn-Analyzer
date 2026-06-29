@@ -1,6 +1,5 @@
 package br.com.unipe;
 
-
 public class Main {
     public static void main(String[] args) {
         Grafo grafo = new Grafo(true, true);
@@ -27,6 +26,5 @@ public class Main {
         grafo.addAresta("4", "3", 4);
 
         System.out.println(grafo.greedySearch("1", "5"));
-
     }
 }

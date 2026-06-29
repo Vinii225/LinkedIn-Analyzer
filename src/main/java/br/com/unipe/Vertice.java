@@ -1,15 +1,14 @@
 package br.com.unipe;
 
-import lombok.Getter;
-import lombok.Setter;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import lombok.Getter;
+import lombok.Setter;
 
 @Getter
 @Setter
 public class Vertice {
-
     private String nome;
     private int grau;
     private int inDegree; // deve ser 0 para não-dirigido
@@ -22,6 +21,7 @@ public class Vertice {
         adjacencias = new ArrayList<>();
         adjacentes = new ArrayList<>();
     }
+
     public void resetaGraus() {
         grau = inDegree = outDegree = 0;
     }
@@ -60,6 +60,4 @@ public class Vertice {
     public String toString() {
         return nome;
     }
-
-
 }
